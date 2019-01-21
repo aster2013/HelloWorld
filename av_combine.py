@@ -29,6 +29,44 @@ class CombineThread(threading.Thread):
                 os.remove(video_file)
                 os.remove(audio_file)
 
+class AVCombiner(object):
+    '''YouTube 视频下载器'''
+
+    def combine(self, urls, max_threads):
+        '''合并 URL 中为文件'''
+
+        if len(urls) == 0:
+            return
+
+        # 线程数目
+        num_threads = min(max_threads, len(urls))
+
+        # 每个线程分配的URL数目
+        urls_per_thread = len(urls) // num_threads
+        if len(urls) % num_threads != 0:
+            urls_per_thread += 1
+
+        print('num_urls =', len(urls))
+        print('num_threads =', num_threads)
+        print('urls_per_thread =', urls_per_thread)
+
+        # 所有合并线程列表
+        combine_threads = []
+
+        for i in range(num_threads):
+            # 将每一段 URL 分配给一个线程
+            beg = i * urls_per_thread
+            end = min(beg + urls_per_thread, len(urls))
+            combine_threads.append(CombineThread(urls[beg:end]))
+
+        # 启动线程
+        for combine_thread in combine_threads:
+            combine_thread.start()
+        
+        # 同步线程
+        for combine_thread in combine_threads:
+            combine_thread.join()
+
 if __name__ == '__main__':
     # 当前目录绝对路径
     DIR = os.path.abspath('.')
@@ -36,34 +74,8 @@ if __name__ == '__main__':
     # 得到所有要合并的文件的 URL
     urls = [os.path.join(DIR, file[:-8]) for file in os.listdir(DIR) if file.endswith('[00].mp4')]
 
-    # for url in urls:
-    #     print(url)
+    for url in urls:
+        print(url)
 
-    # 线程数目
-    num_threads = min(4, len(urls))
-
-    # 每个线程分配的URL数目
-    urls_per_thread = len(urls) // num_threads
-    if len(urls) % num_threads != 0:
-        urls_per_thread += 1
-
-    print('num_urls =', len(urls))
-    print('num_threads =', num_threads)
-    print('urls_per_thread =', urls_per_thread)
-
-    # 所有合并线程列表
-    combine_threads = []
-
-    for i in range(num_threads):
-        # 将每一段 URL 分配给一个线程
-        beg = i * urls_per_thread
-        end = min(beg + urls_per_thread, len(urls))
-        combine_threads.append(CombineThread(urls[beg:end]))
-
-    # 启动线程
-    for combine_thread in combine_threads:
-        combine_thread.start()
+    AVCombiner().combine(urls=urls, max_threads=4)
     
-    # 同步线程
-    for combine_thread in combine_threads:
-        combine_thread.join()
