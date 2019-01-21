@@ -58,7 +58,7 @@ class PageUrlsProvider(UrlsProvider):
 
         # 是否使用代理
         if self.http_proxy:
-            proxy_handler = urllib.request.ProxyHandler({ 'http': self.http_proxy })
+            proxy_handler = urllib.request.ProxyHandler({ 'http': self.http_proxy, 'https': self.http_proxy })
             opener = urllib.request.build_opener(proxy_handler)
             urllib.request.install_opener(opener)
 
